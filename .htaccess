@@ -1,8 +1,12 @@
+# --- Canonical redirect: force HTTPS and non-www in one hop ---
 RewriteEngine On
-RewriteCond %{SERVER_PORT} !=443
-RewriteRule ^(.*)$ https://reformas-canet-de-mar.es//$1 [R=301,L]
 
-# --- Content types (ensure proper MIME) ---
+# If request is HTTP OR host is www, send to https://reformas-canet-de-mar.es/
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\.reformas-canet-de-mar\.es$ [NC]
+RewriteRule ^ https://reformas-canet-de-mar.es%{REQUEST_URI} [R=301,L]
+
+# --- MIME types (ensure proper content types) ---
 AddType image/avif avif
 AddType image/webp webp
 AddType image/svg+xml svg
@@ -11,21 +15,24 @@ AddType font/woff  woff
 AddType application/vnd.ms-fontobject eot
 AddType font/ttf   ttf
 
-# --- Caching via headers only (avoid duplicates) ---
+# --- Caching policy ---
 <IfModule mod_headers.c>
-  # Strong client cache for static assets (1 year + immutable)
+  # Strong cache for static assets (1 year + immutable)
   <FilesMatch "\.(?i:css|js|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|eot)$">
     Header always unset Pragma
     Header always set Cache-Control "public, max-age=31536000, immutable"
     Header always set Expires "Thu, 31 Dec 2037 23:55:55 GMT"
   </FilesMatch>
 
-  # No persistent cache for HTML/JSON
+  # No persistent cache for HTML/JSON (keep pages fresh)
   <FilesMatch "\.(?i:html|json)$">
     Header always set Cache-Control "no-cache, no-store, must-revalidate"
     Header always set Pragma "no-cache"
     Header always set Expires "0"
   </FilesMatch>
+
+  # OPTIONAL: HSTS (enables strict HTTPS in browsers). Enable after verifying HTTPS everywhere.
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 </IfModule>
 
 # --- Compression ---
