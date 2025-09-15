@@ -1,11 +1,6 @@
-# --- Force HTTPS + canonical host (non-www) ---
 RewriteEngine On
-
-# Redirect if host is not canonical OR request is not HTTPS (also respect proxy header)
-RewriteCond %{HTTP_HOST} !^reformas-canet-de-mar\.es$ [NC,OR]
-RewriteCond %{HTTPS} !=on [OR]
-RewriteCond %{HTTP:X-Forwarded-Proto} !=https
-RewriteRule ^ https://reformas-canet-de-mar.es%{REQUEST_URI} [R=301,L]
+RewriteCond %{SERVER_PORT} !=443
+RewriteRule ^(.*)$ https://reformas-canet-de-mar.es//$1 [R=301,L]
 
 # --- Content types (ensure proper MIME) ---
 AddType image/avif avif
